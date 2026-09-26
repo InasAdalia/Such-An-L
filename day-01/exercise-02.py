@@ -30,7 +30,6 @@ iteration = 1
 messages = []
 
 while True:
-    os.system('cls' if os.name == 'nt' else 'clear')
     chain = prompt | llm | parser
 
     # then we no longer need to inject variables into the dict
@@ -46,8 +45,16 @@ while True:
     })
 
     messages.append(f"AI: {result3}")
-    for (m) in messages[-4:]:
-        print(m)
+
+    if (messages.__len__() > 5):
+        # print only last 5 messages
+        # pop shouuld be removing first
+        messages.pop(0)
+        os.system('cls' if os.name == 'nt' else 'clear')
+        for (m) in messages[-5:]:
+            print(m)
+    else:
+        print(messages[-1])
 
     # print only the last 4 message index
     print(f"[debug] iteration : {iteration}")
