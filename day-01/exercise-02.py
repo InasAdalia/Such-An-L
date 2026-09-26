@@ -1,47 +1,25 @@
+# 1. remember the student’s name, goal, and preferred explanation style,
+# 2. answer study questions in that style, 
+# 3. keep only the last few chat turns in active memory,
+# 4. compress older turns into a short running summary,
+# 5. save that summary to a local file so it can be loaded again after restarting the script.
+
 from langchain.agents import create_agent
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
+import os
 
 llm = ChatOllama(
     model="llama3.2:3b",
 )
 
-prompt = ChatPromptTemplate(
-    [
-        ("system", "You are a teacher that mentors students. You must remember the student's name, goal, and preferred explanation style "),
-        ("human", "Hello, i am {name}, I want to learn about  {topic}."),
-        ("ai", "Hi {name}, sure, we can learn about {topic}, but what is your preferred explanation style?"),
-        # ("human", "{input}")
-    ]
-)
-
 parser = StrOutputParser()
-chain = prompt | llm | parser
 
-user_input=""
-
-vars = {
-    "name": "kacchan",
-    "topic" : "making matcha",
-    "input" : user_input
-}
-
-# result = chain.invoke(vars)
-
-# print(f"Convo start: {result}")
-# user_input = input("Reply to AI: ")
-# prompt.append(message=("human", user_input))
-
-
-# result2 = (prompt | llm | parser).invoke(vars)
-# print(f"AI Response 2: {result2}")
-# # second invoke will start over the
-
-
-prompt2 = ChatPromptTemplate([
-    ("system", "You are a teacher that mentors students. You must remember the student's name, goal, and preferred explanation style. Make sure start with greetings and asking them question so that you get enough context."),
+prompt = ChatPromptTemplate([
+    ("system", "You are a teacher that mentors student named {name} that has a goal of {goal}. Explain concepts in a {style} style. Everytime you speak, mention the student's name"),
+    # ("ai", "Hi, what's your name and topic you're interested in?")
 ])
 
 human_input = ""
@@ -49,22 +27,41 @@ iteration = 1
 
 # def invokeAI():
 
-
+messages = []
 
 while True:
+    os.system('cls' if os.name == 'nt' else 'clear')
+    chain = prompt | llm | parser
 
-    chain = prompt2 | llm | parser
+    # then we no longer need to inject variables into the dict
+    # result3 = chain.invoke({
+    #     "name": "kacchan",
+    #     "goal": "learn to make matcha",
+    #     "style": "simple"
+    # })
+    result3 = chain.invoke({
+        "name": "",
+        "goal": "",
+        "style": ""
+    })
 
-    result3 = chain.invoke(vars)
+    messages.append(f"AI: {result3}")
+    for (m) in messages[-4:]:
+        print(m)
 
-    print(f"AI: {result3}")
+    # print only the last 4 message index
     print(f"[debug] iteration : {iteration}")
     # only if ai is asking question we ask for human input
     human_input = input("You :")
 
-    if (input == ("quit" or "exit" or "X")) :
+    if (human_input == ("quit" or "exit" or "X")) :
         break
-
-    prompt2.append(("human", human_input))
+    
+    # if human_input.__contains__("name"):
+        # extract the name and topic and turn into variable {name} and {topic} before appending
+    messages.append(f"You: {human_input}")
+    prompt.append(("human", human_input))
     iteration+=1
+    # clear terminal
+
 
