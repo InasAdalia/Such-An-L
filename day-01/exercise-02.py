@@ -1,10 +1,10 @@
-# 1. remember the student’s name, goal, and preferred explanation style,
+# 1. remember the student’s name, goal, and preferred explanation style, ✅
 # 2. answer study questions in that style, 
-# 3. keep only the last few chat turns in active memory,
+# 3. keep only the last few chat turns in active memory ✅
 # 4. compress older turns into a short running summary,
 # 5. save that summary to a local file so it can be loaded again after restarting the script.
 
-from langchain.agents import create_agent
+from langchain.agents import create_agent 
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.messages import SystemMessage, HumanMessage, AIMessage
@@ -18,7 +18,7 @@ llm = ChatOllama(
 parser = StrOutputParser()
 
 prompt = ChatPromptTemplate([
-    ("system", "You are a teacher that mentors student named {name} that has a goal of {goal}. Explain concepts in a {style} style. Everytime you speak, mention the student's name"),
+    ("system", "You are a teacher that mentors the user as a student. Begin by asking for the student's name, topic of interest, and preferred explanation style. Always mention their name in every conversation."),
     # ("ai", "Hi, what's your name and topic you're interested in?")
 ])
 
@@ -40,8 +40,6 @@ while True:
     # })
     result3 = chain.invoke({
         "name": "",
-        "goal": "",
-        "style": ""
     })
 
     messages.append(f"AI: {result3}")
