@@ -1,9 +1,14 @@
 # 1. remember the student’s name, goal, and preferred explanation style, ✅
-# 2. answer study questions in that style, 
+# 2. answer study questions in that style, ✅
 # 3. keep only the last few chat turns in active memory ✅
 # 4. compress older turns into a short running summary,
 # 5. save that summary to a local file so it can be loaded again after restarting the script.
+import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from utils import GREEN, RESET
 from langchain.agents import create_agent 
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
@@ -11,62 +16,54 @@ from langchain.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 import os
 
+
 llm = ChatOllama(
     model="llama3.2:3b",
 )
 
+
+
 parser = StrOutputParser()
-
-prompt = ChatPromptTemplate([
-    ("system", "You are a teacher that mentors the user as a student. Begin by asking for the student's name, topic of interest, and preferred explanation style. Always mention their name in every conversation."),
-    # ("ai", "Hi, what's your name and topic you're interested in?")
-])
-
+history = []
 human_input = ""
 iteration = 1
 
-# def invokeAI():
-
-messages = []
-
 while True:
+    prompt = ChatPromptTemplate([
+        ("system", "You are a teacher that mentors the user as a student. Begin by asking for the student's name, topic of interest, and preferred explanation style. Always mention their name in every conversation."),
+        *history,
+    ])
     chain = prompt | llm | parser
 
-    # then we no longer need to inject variables into the dict
-    # result3 = chain.invoke({
-    #     "name": "kacchan",
-    #     "goal": "learn to make matcha",
-    #     "style": "simple"
-    # })
-    result3 = chain.invoke({
+    result = chain.invoke({
         "name": "",
     })
 
-    messages.append(f"AI: {result3}")
+    history.append(AIMessage(result))
 
-    if (messages.__len__() > 5):
-        # print only last 5 messages
-        # pop shouuld be removing first
-        messages.pop(0)
-        os.system('cls' if os.name == 'nt' else 'clear')
-        for (m) in messages[-5:]:
-            print(m)
-    else:
-        print(messages[-1])
+    if (history.__len__() > 5): # print only last 5 messages
+        
+        os.system('cls' if os.name == 'nt' else 'clear') # clear terminal
+        for (h) in history[-5:]:
+            print(f"AI: {h.content}")
+    else: # print last element
+        print(f"AI: {history[-1].content}")
 
     # print only the last 4 message index
     print(f"[debug] iteration : {iteration}")
-    # only if ai is asking question we ask for human input
+
     human_input = input("You :")
 
     if (human_input == ("quit" or "exit" or "X")) :
         break
     
-    # if human_input.__contains__("name"):
-        # extract the name and topic and turn into variable {name} and {topic} before appending
-    messages.append(f"You: {human_input}")
-    prompt.append(("human", human_input))
+    history.append(HumanMessage(human_input))
+
+    # [debug] to check history contents passed into prompt
+    print(f"{GREEN}\n[debug]HISTORY: \n")
+    for (index, h) in enumerate(history, start=1):
+        print(f"{GREEN}\n{index}. {h.type}: {h.content} {RESET}\n")
+
     iteration+=1
-    # clear terminal
 
 
